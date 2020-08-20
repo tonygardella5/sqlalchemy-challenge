@@ -32,7 +32,8 @@ def home():
 
 @app.route("/api/v1.0/precipitation")
 def precipitation():
-    last_date = session.query(measurement.date, measurement.prcp).group_by(measurement.date).order_by(measurement.date.desc()).limit(365).all()
+    sel = [measurement.date, measurement.prcp]
+    last_date = session.query(sel).group_by(measurement.date).order_by(measurement.date.desc()).limit(365).all()
     precip = {date: prcp for date, prcp in last_date}
     return precip
 
@@ -49,6 +50,20 @@ def temps():
     last_date_selected = session.query(*sel).group_by(measurement.date).order_by(measurement.date.desc()).filter(measurement.station =='USC00519281').limit(356).all()
     temperature = {date: tobs for date, tobs in last_date_selected}
     return temperature
+
+@app.route("/api/v1.0/temp/<start>")
+def star(start):
+    sel = [func.min(measurement.tobs), func.avg(measurement.tobs), func.max(measurement.tobs)]
+    temp = session.query(*sel).filter(measurement.date >= start).all()
+    temps = list(np.ravel(temp))
+    return temps
+
+@app.route("/api/v1.0/temp/<start>/<end>")
+def startend(start, end):    
+    sel = [func.min(measurement.tobs), func.avg(measurement.tobs), func.max(measurement.tobs)]
+    temp = session.query(*sel).filter(measurement.date >= start).filter(measurement.date <= end).all()
+    temps = list(np.ravel(temp))
+    return temps
 
 
 
